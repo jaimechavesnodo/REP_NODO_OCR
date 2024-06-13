@@ -22,11 +22,12 @@ async function bootstrap() {
    .setVersion('1.0')
    .build();
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('confecamaras/docs', app, document);
+  SwaggerModule.setup('ocr/docs', app, document);
 
-  await app.listen(process.env.PORT);
+  const port = process.env.PORT || '8080';
+  await app.listen(port, '0.0.0.0'); 
   
-  const log = new Logger('ConfeCamaras');
-  log.log(`ConfeCamaras is running on: ${await app.getUrl()}`);
+  const log = new Logger('APP_OCR');
+  log.log(`APP_OCR is running on: http://:${port}`);
 }
 bootstrap();
