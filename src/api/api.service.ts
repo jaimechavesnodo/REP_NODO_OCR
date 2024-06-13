@@ -52,18 +52,40 @@ export class ApiService {
     fs.unlinkSync(tempFilePath);
     const dataText = this.proccessText(text);
 
-    return { url: uploadedUrl, dataText, readed: (dataText.length) ? true : false };
+    const readed = this.validationFound(dataText)
+
+    return { url: uploadedUrl, dataText, readed: readed[0], valid: readed[1]};
   }
 
   proccessText(text: string): string[] {
     if(text.length > 0) {
       const newText = text.split('\n');
       console.log('newText=======================', newText);
-      const x = newText.filter(item => item.toLocaleLowerCase().includes('nit') || item.toLocaleLowerCase().includes('total'));
-      console.log('x=======================', x);
-      return x
+      const data = newText.filter(
+        item => item.toLocaleLowerCase().includes('nit') || 
+        item.toLocaleLowerCase().includes('total') ||
+        item.toLocaleLowerCase().includes('combustible')
+      );
+      console.log('x=======================', data);
+      return data
     } 
     return []
+  }
+
+  validationFound(data: string[]) : boolean[] {
+    let return1 = true;
+    let return2 = true;
+    const response = data.filter(
+      item => item.toLocaleLowerCase().includes('total')
+    );
+    if (response.length >= 2) return1 = false;
+
+    const response2 = data.filter(
+      item => item.toLocaleLowerCase().includes('#Redeban') || item.toLocaleLowerCase().includes('Redeban')
+    );
+    if (response2.length >= 1) return2 = false;
+    return1 = (response.length > 2) ? true : false;
+    return [return1, return2];
   }
 
   async downloadImage(url: string): Promise<Buffer> {
