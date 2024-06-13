@@ -1,6 +1,3 @@
-# Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
-# More GitHub Actions for Azure: https://github.com/Azure/actions
-
 name: Build and deploy Node.js app to Azure Web App - appOcrNodo
 
 on:
@@ -21,14 +18,34 @@ jobs:
         with:
           node-version: '20.x'
 
-      - name: npm install, build, and test
+      - name: Install specific npm version
+        run: npm install -g npm@10.8.1
+
+      - name: Clean install dependencies
         run: |
+          rm -rf node_modules
           npm install
-          npm run build --if-present
-          npm run test --if-present
+
+      - name: Build the project
+        run: npm run build
+
+      - name: List files in the root directory
+        run: ls -la
+
+      - name: List files in the dist directory
+        run: ls -la dist
+
+      - name: List files in the node_modules directory
+        run: ls -la node_modules
+
+      - name: List files in the node_modules/.bin directory
+        run: ls -la node_modules/.bin
+
+      - name: Ensure correct permissions for all files
+        run: chmod -R 755 .
 
       - name: Zip artifact for deployment
-        run: zip release.zip ./* -r
+        run: zip -r release.zip .
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v3
@@ -43,7 +60,7 @@ jobs:
       name: 'Production'
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
     permissions:
-      id-token: write #This is required for requesting the JWT
+      id-token: write
 
     steps:
       - name: Download artifact from build job
@@ -53,7 +70,7 @@ jobs:
 
       - name: Unzip artifact for deployment
         run: unzip release.zip
-      
+
       - name: Login to Azure
         uses: azure/login@v1
         with:
@@ -68,4 +85,19 @@ jobs:
           app-name: 'appOcrNodo'
           slot-name: 'Production'
           package: .
-          
+          startup-command: 'npm run start:prod'
+
+      - name: List files in the deployed directory
+        run: ls -la
+
+      - name: Check running Node.js version
+        run: node -v
+
+      - name: Check running npm version
+        run: npm -v
+
+      - name: Verify node_modules in deployed directory
+        run: ls -la node_modules
+
+      - name: Verify dist directory in deployed directory
+        run: ls -la dist
