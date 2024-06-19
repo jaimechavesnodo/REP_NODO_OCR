@@ -5,11 +5,16 @@ import { ReadSaveFileDto } from './dto/read-file-api.dto';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as Tesseract from 'tesseract.js';
+import OpenAI from 'openai';
+import { imageToText } from './prompt-gpt/image-to-text'
 
 @Injectable()
 export class ApiService {
   private logger = new Logger('ApiService');
   private containerClient;
+  private openai = new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY,
+  });
 
   constructor(private readonly httpService: AxiosAdapter) {
     const account = process.env.AZURE_STORAGE_ACCOUNT;
@@ -25,17 +30,6 @@ export class ApiService {
     this.containerClient = blobServiceClient.getContainerClient(containerName);
   }
 
-  async readFile(filePath: string): Promise<string> {
-    try {
-      const text = await Tesseract.recognize(filePath).then(res => res.data.text);
-      this.logger.log(text);
-      return text;
-    } catch (error) {
-      this.handleDBExceptions(error);
-    }
-    return '';
-  }
-
   async readSaveFile(readSaveFileDto: ReadSaveFileDto) {
     const imageBuffer = await this.downloadImage(readSaveFileDto.url);
     const filename = path.basename(readSaveFileDto.url);
@@ -47,45 +41,41 @@ export class ApiService {
 
     const tempFilePath = path.join(uploadsDir, filename);
     fs.writeFileSync(tempFilePath, imageBuffer);
-    const text = await this.readFile(tempFilePath);
     const uploadedUrl = await this.uploadImage(imageBuffer, filename);
+    const text = await imageToText(this.openai, uploadedUrl);
     fs.unlinkSync(tempFilePath);
-    const dataText = this.proccessText(text);
+    console.log('================================');
+    console.log(text);
+    let data: any;
+    if (text.msg.startsWith("```json")) {
+      try {
+        const jsonString = text.msg.replace(/```json\n/, '').replace(/\n```$/, '');
+        data = JSON.parse(jsonString);
+        data.total = this.cleanNumberString(data.total)
+      } catch (error) {
+        console.error("Error parsing JSON:", error);
+      }
+    } else {
+      data = {
+        "commerce": "",
+        "numberInvoice": "",
+        "date": "",
+        "nit": "",
+        "total": "",
+        "produc": ""
+      }
+    }
 
-    const readed = this.validationFound(dataText)
-
-    return { url: uploadedUrl, dataText, readed: readed[0], valid: readed[1]};
+    console.log(text);
+    return { url: uploadedUrl, ...data  };
   }
 
-  proccessText(text: string): string[] {
-    if(text.length > 0) {
-      const newText = text.split('\n');
-      console.log('newText=======================', newText);
-      const data = newText.filter(
-        item => item.toLocaleLowerCase().includes('nit') || 
-        item.toLocaleLowerCase().includes('total') ||
-        item.toLocaleLowerCase().includes('combustible')
-      );
-      console.log('x=======================', data);
-      return data
-    } 
-    return []
-  }
 
-  validationFound(data: string[]) : boolean[] {
-    let return1 = true;
-    let return2 = true;
-    const response = data.filter(
-      item => item.toLocaleLowerCase().includes('total')
-    );
-    if (response.length >= 2) return1 = false;
-
-    const response2 = data.filter(
-      item => item.toLocaleLowerCase().includes('#Redeban') || item.toLocaleLowerCase().includes('Redeban')
-    );
-    if (response2.length >= 1) return2 = false;
-    return1 = (response.length > 2) ? true : false;
-    return [return1, return2];
+  cleanNumberString(input: string): number {
+    let step1 = input.replace(/\./g, '');
+    let step2 = step1.replace(/,/g, '.');
+    let result = parseInt(step2);
+    return result;
   }
 
   async downloadImage(url: string): Promise<Buffer> {
