@@ -6,5 +6,6 @@ export const imageToTextPrompt = () => {
         Nombre de quien expide la factura, numero de factura, Fecha, Nit, Total, Producto.
 
         En el mensaje de salida retorname solo el json con la informacion que necesito algo parecido a esto.
+        Antes de entregarme la informacion rectifica la imange nuevamente para asegurar que la informacion sea correcta
     `
 }

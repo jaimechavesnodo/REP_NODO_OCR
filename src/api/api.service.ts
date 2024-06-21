@@ -47,16 +47,41 @@ export class ApiService {
     console.log('================================');
     console.log(text);
     let data: any;
+    if(text.msg.includes('Redeban')) {
+      return data = {
+        "commerce": "Redeban",
+        "numberInvoice": "",
+        "date": "",
+        "nit": "",
+        "total": "",
+        "produc": ""
+      }
+    }
     if (text.msg.startsWith("```json")) {
       try {
         const jsonString = text.msg.replace(/```json\n/, '').replace(/\n```$/, '');
         data = JSON.parse(jsonString);
+        console.log('================================');
+        console.log(data);
+        console.log(data.total);
+        console.log(data.total.length);
+        console.log(data.total.length < 6);
+        if (data.total.length < 6) {
+          return data = {
+            "commerce": "",
+            "numberInvoice": "",
+            "date": "",
+            "nit": "",
+            "total": "",
+            "produc": ""
+          }
+        }
         data.total = this.cleanNumberString(data.total)
       } catch (error) {
         console.error("Error parsing JSON:", error);
       }
     } else {
-      data = {
+      return data = {
         "commerce": "",
         "numberInvoice": "",
         "date": "",
@@ -67,7 +92,7 @@ export class ApiService {
     }
 
     console.log(text);
-    return { url: uploadedUrl, ...data  };
+    return { url: uploadedUrl, ...data };
   }
 
 
