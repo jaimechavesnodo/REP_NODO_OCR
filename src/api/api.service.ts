@@ -95,11 +95,11 @@ export class ApiService {
     return { url: uploadedUrl, ...data };
   }
 
-
-  cleanNumberString(input: string): number {
-    let step1 = input.replace(/\./g, '');
+   cleanNumberString(input: string): number {
+    let step1 = input.replace(/[.,]/g, '');
     let step2 = step1.replace(/,/g, '.');
-    let result = parseInt(step2);
+    let result = parseFloat(step2);
+  
     return result;
   }
 
