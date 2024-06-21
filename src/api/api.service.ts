@@ -77,6 +77,16 @@ export class ApiService {
           }
         }
         data.total = this.cleanNumberString(data.total)
+        if(data.total.toString().includes(',')) {
+          return data = {
+            "commerce": "",
+            "numberInvoice": "",
+            "date": "",
+            "nit": "",
+            "total": "",
+            "produc": ""
+          }
+        }
       } catch (error) {
         console.error("Error parsing JSON:", error);
       }
