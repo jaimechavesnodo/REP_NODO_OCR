@@ -54,7 +54,8 @@ export class ApiService {
         "date": "",
         "nit": "",
         "total": "",
-        "produc": ""
+        "produc": "",
+        "read": "false"
       }
     }
     if (text.msg.startsWith("```json")) {
@@ -66,17 +67,10 @@ export class ApiService {
         console.log(data.total);
         console.log(data.total.length);
         console.log(data.total.length < 6);
-        if (data.total.length < 6) {
-          return data = {
-            "commerce": "",
-            "numberInvoice": "",
-            "date": "",
-            "nit": "",
-            "total": "",
-            "produc": ""
-          }
+        if ( this.validation(data) ) {
+          return data = { ...data, read: false };
         }
-        data.total = this.cleanNumberString(data.total)
+        return data = { ...data, total: this.cleanNumberString(data.total), read: "true" }
         if(data.total.toString().includes(',')) {
           return data = {
             "commerce": "",
@@ -84,7 +78,8 @@ export class ApiService {
             "date": "",
             "nit": "",
             "total": "",
-            "produc": ""
+            "produc": "",
+            "read": "false"
           }
         }
       } catch (error) {
@@ -97,12 +92,25 @@ export class ApiService {
         "date": "",
         "nit": "",
         "total": "",
-        "produc": ""
+        "produc": "",
+        "read": "false"
       }
     }
 
     console.log(text);
     return { url: uploadedUrl, ...data };
+  }
+
+  validation(data: any) {
+    return (
+      data.total.length < 6 
+      || data.total < '10000' 
+      || data.total < '10.000'
+      || data.total < '10,000'
+      || data.total > '500000'
+      || data.total > '500.000'
+      || data.total > '500,000'
+    )
   }
 
 
