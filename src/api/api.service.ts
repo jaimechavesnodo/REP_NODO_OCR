@@ -70,7 +70,6 @@ export class ApiService {
         if ( this.validation(data) ) {
           return data = { ...data, read: false };
         }
-        return data = { ...data, total: this.cleanNumberString(data.total), read: "true" }
         if(data.total.toString().includes(',')) {
           return data = {
             "commerce": "",
@@ -82,6 +81,7 @@ export class ApiService {
             "read": "false"
           }
         }
+        return data = { ...data, total: this.cleanNumberString(data.total), read: "true" }
       } catch (error) {
         console.error("Error parsing JSON:", error);
       }
