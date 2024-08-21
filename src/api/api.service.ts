@@ -44,6 +44,8 @@ export class ApiService {
     const uploadedUrl = await this.uploadImage(imageBuffer, filename);
     const text = await imageToText(this.openai, uploadedUrl);
     fs.unlinkSync(tempFilePath);
+
+    console.log(uploadedUrl)
     
     let data: any;
     if (text.msg.includes('Redeban')) {
@@ -63,7 +65,7 @@ export class ApiService {
         const jsonString = text.msg.replace(/```json\n/, '').replace(/\n```$/, '');
         data = JSON.parse(jsonString);
         if ( this.validation(data) ) {
-          return data = { ...data, read: false };
+          return data = { ...data, read: false,  "url": uploadedUrl };
         }
         if(data.total.toString().includes(',')) {
           return data = {
@@ -77,7 +79,7 @@ export class ApiService {
             "url": uploadedUrl
           }
         }
-        return data = { ...data, total: this.cleanNumberString(data.total), read: "true" }
+        return data = { ...data, total: this.cleanNumberString(data.total), read: "true",  "url": uploadedUrl }
       } catch (error) {
         console.error("Error parsing JSON:", error);
       }
