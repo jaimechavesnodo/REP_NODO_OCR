@@ -125,7 +125,7 @@ export class ApiService {
     try {
       const headers = {
         Authorization: `Bearer ${process.env.WATI_TOKEN}`
-      };
+      }; 
       const response: any = await this.httpService.get(`${process.env.WATI_URL_BASE}/${process.env.WATI_TENAN}/api/v1/getMedia?fileName=${url}`, { headers, responseType: 'arraybuffer' });
       console.log(response);
       if (!response) {
