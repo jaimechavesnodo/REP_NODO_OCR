@@ -44,8 +44,7 @@ export class ApiService {
     const uploadedUrl = await this.uploadImage(imageBuffer, filename);
     const text = await imageToText(this.openai, uploadedUrl);
     fs.unlinkSync(tempFilePath);
-    console.log('================================');
-    console.log(text);
+    
     let data: any;
     if (text.msg.includes('Redeban')) {
       return data = {
@@ -55,18 +54,14 @@ export class ApiService {
         "nit": "",
         "total": "",
         "produc": "",
-        "read": "false"
+        "read": "false",
+        url: uploadedUrl
       }
     }
     if (text.msg.startsWith("```json")) {
       try {
         const jsonString = text.msg.replace(/```json\n/, '').replace(/\n```$/, '');
         data = JSON.parse(jsonString);
-        console.log('================================');
-        console.log(data);
-        console.log(data.total);
-        console.log(data.total.length);
-        console.log(data.total.length < 6);
         if ( this.validation(data) ) {
           return data = { ...data, read: false };
         }
@@ -78,7 +73,8 @@ export class ApiService {
             "nit": "",
             "total": "",
             "produc": "",
-            "read": "false"
+            "read": "false",
+            url: uploadedUrl
           }
         }
         return data = { ...data, total: this.cleanNumberString(data.total), read: "true" }
@@ -93,7 +89,8 @@ export class ApiService {
         "nit": "",
         "total": "",
         "produc": "",
-        "read": "false"
+        "read": "false",
+        url: uploadedUrl
       }
     }
 
