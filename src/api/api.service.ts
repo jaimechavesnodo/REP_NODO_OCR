@@ -55,7 +55,7 @@ export class ApiService {
         "total": "",
         "produc": "",
         "read": "false",
-        url: uploadedUrl
+        "url": uploadedUrl
       }
     }
     if (text.msg.startsWith("```json")) {
@@ -74,7 +74,7 @@ export class ApiService {
             "total": "",
             "produc": "",
             "read": "false",
-            url: uploadedUrl
+            "url": uploadedUrl
           }
         }
         return data = { ...data, total: this.cleanNumberString(data.total), read: "true" }
@@ -90,12 +90,12 @@ export class ApiService {
         "total": "",
         "produc": "",
         "read": "false",
-        url: uploadedUrl
+        "url": uploadedUrl
       }
     }
 
     console.log(text);
-    return { url: uploadedUrl, ...data };
+    return { "url": uploadedUrl, ...data };
   }
 
   validation(data: any) {
