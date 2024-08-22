@@ -68,9 +68,6 @@ export class ApiService {
         if ( this.validation(data) ) {
           return data = { ...data, read: false,  "url": uploadedUrl };
         }
-        if(data.total.toString().includes(',')) {
-          return data = { ...data, read: false,  "url": uploadedUrl };
-        }
         return data = { ...data, total: this.cleanNumberString(data.total), read: "true",  "url": uploadedUrl }
       } catch (error) {
         console.error("Error parsing JSON:", error);
