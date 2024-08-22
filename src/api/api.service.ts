@@ -64,20 +64,12 @@ export class ApiService {
       try {
         const jsonString = text.msg.replace(/```json\n/, '').replace(/\n```$/, '');
         data = JSON.parse(jsonString);
+        console.log(data)
         if ( this.validation(data) ) {
           return data = { ...data, read: false,  "url": uploadedUrl };
         }
         if(data.total.toString().includes(',')) {
-          return data = {
-            "commerce": "",
-            "numberInvoice": "",
-            "date": "",
-            "nit": "",
-            "total": "",
-            "produc": "",
-            "read": "false",
-            "url": uploadedUrl
-          }
+          return data = { ...data, read: false,  "url": uploadedUrl };
         }
         return data = { ...data, total: this.cleanNumberString(data.total), read: "true",  "url": uploadedUrl }
       } catch (error) {
