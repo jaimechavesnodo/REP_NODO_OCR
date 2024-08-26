@@ -103,16 +103,18 @@ export class ApiService {
 
 
   cleanNumberString(input: string): string {
-    const firstChar = input.indexOf('.') !== -1 && input.indexOf('.') < input.indexOf(',') ? '.' : 
-                      input.indexOf(',') !== -1 && input.indexOf(',') < input.indexOf('.') ? ',' : null;
+    // Eliminar todos los caracteres que no sean números, comas o puntos
+    const cleanedInput = input.replace(/[^0-9,\.]/g, '');
+    const firstChar = cleanedInput.indexOf('.') !== -1 && cleanedInput.indexOf('.') < cleanedInput.indexOf(',') ? '.' : 
+                      cleanedInput.indexOf(',') !== -1 && cleanedInput.indexOf(',') < cleanedInput.indexOf('.') ? ',' : null;
 
     if (firstChar === ',') {
-      let inputSplit = input.split('.');
+      let inputSplit = cleanedInput.split('.');
       let cleaned = inputSplit[0].replace(/\,/g, '');
       console.log(cleaned)
       return cleaned;
     } else {
-      let inputSplit = input.split(',');
+      let inputSplit = cleanedInput.split(',');
       let cleaned = inputSplit[0].replace(/\./g, '');
       console.log(cleaned)
       return cleaned;
