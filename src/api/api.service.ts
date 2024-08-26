@@ -92,21 +92,31 @@ export class ApiService {
   validation(data: any) {
     return (
       data.total.length < 6 
-      || data.total < '10000' 
-      || data.total < '10.000'
-      || data.total < '10,000'
-      || data.total > '500000'
-      || data.total > '500.000'
-      || data.total > '500,000'
+      || this.cleanNumberString(data.total) < '10000' 
+      || this.cleanNumberString(data.total) < '10.000'
+      || this.cleanNumberString(data.total) < '10,000'
+      || this.cleanNumberString(data.total) > '500000'
+      || this.cleanNumberString(data.total) > '500.000'
+      || this.cleanNumberString(data.total) > '500,000'
     )
   }
 
 
-  cleanNumberString(input: string): number {
-    let step1 = input.replace(/\./g, '');
-    let step2 = step1.replace(/,/g, '.');
-    let result = parseInt(step2);
-    return result;
+  cleanNumberString(input: string): string {
+    const firstChar = input.indexOf('.') !== -1 && input.indexOf('.') < input.indexOf(',') ? '.' : 
+                      input.indexOf(',') !== -1 && input.indexOf(',') < input.indexOf('.') ? ',' : null;
+
+    if (firstChar === ',') {
+      let inputSplit = input.split('.');
+      let cleaned = inputSplit[0].replace(/\,/g, '');
+      console.log(cleaned)
+      return cleaned;
+    } else {
+      let inputSplit = input.split(',');
+      let cleaned = inputSplit[0].replace(/\./g, '');
+      console.log(cleaned)
+      return cleaned;
+    }
   }
 
   async downloadImage(url: string): Promise<Buffer> {
