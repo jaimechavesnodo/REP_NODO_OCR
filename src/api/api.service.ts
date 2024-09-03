@@ -114,10 +114,10 @@ export class ApiService {
         const jsonString = text.msg.replace(/```json\n/, '').replace(/\n```$/, '');
         data = JSON.parse(jsonString);
         console.log(data)
-        if ( this.validation(data) ) {
-          return data = { ...data, total: this.cleanNumberString(data.total), read: false,  "url": uploadedUrl };
+        if ( this.validation(data) && data.nit.replace(/[^0-9]/g, '').includes('22222222') ) {
+          return data = { ...data, total: this.cleanNumberString(data.total), commerce: '', read: false,  "url": uploadedUrl };
         }
-        return data = { ...data, total: this.cleanNumberString(data.total), read: "true",  "url": uploadedUrl }
+        return data = { ...data, total: this.cleanNumberString(data.total), commerce: '', read: "true",  "url": uploadedUrl }
       } catch (error) {
         console.error("Error parsing JSON:", error);
       }
