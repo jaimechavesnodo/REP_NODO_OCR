@@ -89,9 +89,58 @@ export class ApiService {
     return { "url": uploadedUrl, ...data };
   }
 
+  async readSaveFile2(readSaveFileDto: ReadSaveFileDto) {
+
+    const uploadedUrl = readSaveFileDto.url;
+    const text = await imageToText(this.openai, uploadedUrl);
+
+    console.log(uploadedUrl)
+    
+    let data: any;
+    if (text.msg.includes('Redeban')) {
+      return data = {
+        "commerce": "Redeban",
+        "numberInvoice": "",
+        "date": "",
+        "nit": "",
+        "total": "",
+        "produc": "",
+        "read": "false",
+        "url": uploadedUrl
+      }
+    }
+    if (text.msg.startsWith("```json")) {
+      try {
+        const jsonString = text.msg.replace(/```json\n/, '').replace(/\n```$/, '');
+        data = JSON.parse(jsonString);
+        console.log(data)
+        if ( this.validation(data) ) {
+          return data = { ...data, read: false,  "url": uploadedUrl };
+        }
+        return data = { ...data, total: this.cleanNumberString(data.total), read: "true",  "url": uploadedUrl }
+      } catch (error) {
+        console.error("Error parsing JSON:", error);
+      }
+    } else {
+      return data = {
+        "commerce": "",
+        "numberInvoice": "",
+        "date": "",
+        "nit": "",
+        "total": "",
+        "produc": "",
+        "read": "false",
+        "url": uploadedUrl
+      }
+    }
+
+    return { "url": uploadedUrl, ...data };
+  }
+
   validation(data: any) {
     return (
       data.total.length < 6 
+      || data.total.length > 7 
       || this.cleanNumberString(data.total) < '10000' 
       || this.cleanNumberString(data.total) < '10.000'
       || this.cleanNumberString(data.total) < '10,000'
@@ -105,9 +154,7 @@ export class ApiService {
   cleanNumberString(input: string): string {
     // Eliminar todos los caracteres que no sean números, comas o puntos
     const cleanedInput = input.replace(/[^0-9,\.]/g, '');
-    const firstChar = cleanedInput.indexOf('.') !== -1 && cleanedInput.indexOf('.') < cleanedInput.indexOf(',') ? '.' : 
-                      cleanedInput.indexOf(',') !== -1 && cleanedInput.indexOf(',') < cleanedInput.indexOf('.') ? ',' : null;
-
+    const firstChar = cleanedInput.match(/[.,]/)[0];
     if (firstChar === ',') {
       let inputSplit = cleanedInput.split('.');
       let cleaned = inputSplit[0].replace(/\,/g, '');
@@ -128,7 +175,7 @@ export class ApiService {
       }; 
       const response: any = await this.httpService.get(`${process.env.WATI_URL_BASE}/${process.env.WATI_TENAN}/api/v1/getMedia?fileName=${url}`, { headers, responseType: 'arraybuffer' });
       console.log(response);
-      if (!response) {
+      if (!response) { 
         throw new Error('Response data is undefined');
       }
 
