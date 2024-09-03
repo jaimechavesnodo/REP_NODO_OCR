@@ -115,7 +115,7 @@ export class ApiService {
         data = JSON.parse(jsonString);
         console.log(data)
         if ( this.validation(data) ) {
-          return data = { ...data, read: false,  "url": uploadedUrl };
+          return data = { ...data, total: this.cleanNumberString(data.total), read: false,  "url": uploadedUrl };
         }
         return data = { ...data, total: this.cleanNumberString(data.total), read: "true",  "url": uploadedUrl }
       } catch (error) {
@@ -141,12 +141,8 @@ export class ApiService {
     return (
       data.total.length < 6 
       || data.total.length > 7 
-      || this.cleanNumberString(data.total) < '10000' 
-      || this.cleanNumberString(data.total) < '10.000'
-      || this.cleanNumberString(data.total) < '10,000'
-      || this.cleanNumberString(data.total) > '500000'
-      || this.cleanNumberString(data.total) > '500.000'
-      || this.cleanNumberString(data.total) > '500,000'
+      || Number(this.cleanNumberString(data.total)) < 10000
+      || Number(this.cleanNumberString(data.total)) > 500000
     )
   }
 
@@ -159,12 +155,14 @@ export class ApiService {
       let inputSplit = cleanedInput.split('.');
       let cleaned = inputSplit[0].replace(/\,/g, '');
       console.log(cleaned)
-      return cleaned;
+      console.log('----------------------------------------------------------------')
+      return cleaned.replace(/[^0-9]/g, '');
     } else {
       let inputSplit = cleanedInput.split(',');
       let cleaned = inputSplit[0].replace(/\./g, '');
       console.log(cleaned)
-      return cleaned;
+      console.log('----------------------------------------------------------------')
+      return cleaned.replace(/[^0-9]/g, '');
     }
   }
 
