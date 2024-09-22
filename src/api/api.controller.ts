@@ -30,6 +30,13 @@ export class ApiController {
     return this.apiService.readSaveFile2(readSaveFileDto);
   }
 
+  @Post('readSaveFile3')
+  @ApiResponse({ status: 200, description: 'File read and saved', type: ReadSaveFileDto })
+  @ApiResponse({ status: 400, description: 'Bad Request', type: ErrorResponseDto })
+  async readSaveFile3(@Body() readSaveFileDto: ReadSaveFileDto) {
+    return this.apiService.readSaveFile3(readSaveFileDto);
+  }
+
   @Get()
   checkService() {
     throw new HttpException("ok", HttpStatus.OK);

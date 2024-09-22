@@ -64,11 +64,11 @@ export class ApiService {
       try {
         const jsonString = text.msg.replace(/```json\n/, '').replace(/\n```$/, '');
         data = JSON.parse(jsonString);
-        console.log(data)
-        if ( this.validation(data) ) {
-          return data = { ...data, read: false,  "url": uploadedUrl };
+        console.log(data, this.validation(data), data.nit.replace(/[^0-9]/g, '').includes('22222222'))
+        if ( this.validation(data) || data.nit.replace(/[^0-9]/g, '').includes('22222222') ) {
+          return data = { ...data, total: this.cleanNumberString(data.total), commerce: '', read: false,  "url": uploadedUrl };
         }
-        return data = { ...data, total: this.cleanNumberString(data.total), read: "true",  "url": uploadedUrl }
+        return data = { ...data, total: this.cleanNumberString(data.total), commerce: '', read: "true",  "url": uploadedUrl }
       } catch (error) {
         console.error("Error parsing JSON:", error);
       }
@@ -92,6 +92,7 @@ export class ApiService {
   async readSaveFile2(readSaveFileDto: ReadSaveFileDto) {
 
     const uploadedUrl = readSaveFileDto.url;
+    console.log(uploadedUrl)
     const text = await imageToText(this.openai, uploadedUrl);
 
     console.log(uploadedUrl)
@@ -114,7 +115,7 @@ export class ApiService {
         const jsonString = text.msg.replace(/```json\n/, '').replace(/\n```$/, '');
         data = JSON.parse(jsonString);
         console.log(data)
-        if ( this.validation(data) && data.nit.replace(/[^0-9]/g, '').includes('22222222') ) {
+        if ( this.validation(data) || data.nit.replace(/[^0-9]/g, '').includes('22222222') ) {
           return data = { ...data, total: this.cleanNumberString(data.total), commerce: '', read: false,  "url": uploadedUrl };
         }
         return data = { ...data, total: this.cleanNumberString(data.total), commerce: '', read: "true",  "url": uploadedUrl }
@@ -137,11 +138,75 @@ export class ApiService {
     return { "url": uploadedUrl, ...data };
   }
 
+  async readSaveFile3(readSaveFileDto: ReadSaveFileDto) {
+    const imageBuffer = await this.downloadImage2(readSaveFileDto.url);
+    const filename = this.getIdFromUrl(readSaveFileDto.url);
+    console.log(filename);
+    console.log('----------------------------------------------------------------')
+    const uploadsDir = path.join(__dirname, '..', 'uploads');
+    console.log('----------------------------------------------------------------')
+    if (!fs.existsSync(uploadsDir)) {
+      fs.mkdirSync(uploadsDir, { recursive: true });
+    }
+
+    const tempFilePath = path.join(uploadsDir, filename);
+    fs.writeFileSync(tempFilePath, imageBuffer);
+    const uploadedUrl = await this.uploadImage(imageBuffer, filename);
+    const text = await imageToText(this.openai, uploadedUrl);
+    fs.unlinkSync(tempFilePath);
+
+    console.log(uploadedUrl)
+    console.log('----------------------------------------------------------------')
+    let data: any;
+    if (text.msg.includes('Redeban')) {
+      return data = {
+        "commerce": "Redeban",
+        "numberInvoice": "",
+        "date": "",
+        "nit": "",
+        "total": "",
+        "produc": "",
+        "read": "false",
+        "url": uploadedUrl
+      }
+    }
+    if (text.msg.startsWith("```json")) {
+      try {
+        const jsonString = text.msg.replace(/```json\n/, '').replace(/\n```$/, '');
+        data = JSON.parse(jsonString);
+        console.log(data, this.validation(data), data.nit.replace(/[^0-9]/g, '').includes('22222222'))
+        if ( this.validation(data) || data.nit.replace(/[^0-9]/g, '').includes('22222222') ) {
+          return data = { ...data, total: this.cleanNumberString(data.total), commerce: '', read: false,  "url": uploadedUrl };
+        }
+        return data = { ...data, total: this.cleanNumberString(data.total), commerce: '', read: "true",  "url": uploadedUrl }
+      } catch (error) {
+        console.error("Error parsing JSON:", error);
+      }
+    } else {
+      return data = {
+        "commerce": "",
+        "numberInvoice": "",
+        "date": "",
+        "nit": "",
+        "total": "",
+        "produc": "",
+        "read": "false",
+        "url": uploadedUrl
+      }
+    }
+
+    console.log(text);
+    return { "url": uploadedUrl, ...data };
+  }
+
   validation(data: any) {
+    console.log(data);
+    console.log(Number(this.cleanNumberString(data.total)))
+    console.log(data.total.length)
     return (
-      data.total.length < 6 
-      || data.total.length > 7 
-      || Number(this.cleanNumberString(data.total)) < 10000
+      data.nit == ""
+      || data.product == ""
+      || Number(this.cleanNumberString(data.total)) < 20000
       || Number(this.cleanNumberString(data.total)) > 500000
     )
   }
@@ -184,6 +249,24 @@ export class ApiService {
     }
   }
 
+  async downloadImage2(url: string): Promise<Buffer> {
+    try {
+      const headers = {
+        Authorization: `Bearer ${process.env.WATI_TOKEN}`
+      }; 
+      const response: any = await this.httpService.get(`${url}`, { headers, responseType: 'arraybuffer' });
+      console.log(response);
+      if (!response) { 
+        throw new Error('Response data is undefined');
+      }
+
+      return Buffer.from(response, 'binary');
+    } catch (error) {
+      this.logger.error('Image download failed', error);
+      throw new HttpException('Image download failed', HttpStatus.BAD_REQUEST);
+    }
+  }
+
   async uploadImage(buffer: Buffer, filename: string): Promise<string> {
     const blockBlobClient = this.containerClient.getBlockBlobClient(filename);
     try {
@@ -193,6 +276,12 @@ export class ApiService {
       this.logger.error('Image upload failed', error);
       throw new HttpException('Image upload failed', HttpStatus.INTERNAL_SERVER_ERROR);
     }
+  }
+
+  getIdFromUrl(url: string): string | null {
+    const regex = /[?&]id=([^&]+)/;
+    const match = url.match(regex);
+    return match ? match[1] : null;
   }
 
   private handleDBExceptions(error: any) {
