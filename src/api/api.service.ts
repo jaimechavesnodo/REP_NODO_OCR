@@ -54,7 +54,7 @@ export class ApiService {
         "numberInvoice": "",
         "date": "",
         "nit": "",
-        "total": "",
+        "total": "0",
         "produc": "",
         "read": "false",
         "url": uploadedUrl
@@ -66,9 +66,9 @@ export class ApiService {
         data = JSON.parse(jsonString);
         console.log(data, this.validation(data), data.nit.replace(/[^0-9]/g, '').includes('22222222'))
         if ( this.validation(data) || data.nit.replace(/[^0-9]/g, '').includes('22222222') ) {
-          return data = { ...data, total: this.cleanNumberString(data.total), commerce: '', read: false,  "url": uploadedUrl };
+          return data = { ...data, total: (data.total == '') ? '0' : this.cleanNumberString(data.total), commerce: '', read: false,  "url": uploadedUrl };
         }
-        return data = { ...data, total: this.cleanNumberString(data.total), commerce: '', read: "true",  "url": uploadedUrl }
+        return data = { ...data, total: (data.total == '') ? '0' : this.cleanNumberString(data.total), commerce: '', read: "true",  "url": uploadedUrl }
       } catch (error) {
         console.error("Error parsing JSON:", error);
       }
@@ -78,7 +78,7 @@ export class ApiService {
         "numberInvoice": "",
         "date": "",
         "nit": "",
-        "total": "",
+        "total": "0",
         "produc": "",
         "read": "false",
         "url": uploadedUrl
@@ -104,7 +104,7 @@ export class ApiService {
         "numberInvoice": "",
         "date": "",
         "nit": "",
-        "total": "",
+        "total": "0",
         "produc": "",
         "read": "false",
         "url": uploadedUrl
@@ -116,9 +116,9 @@ export class ApiService {
         data = JSON.parse(jsonString);
         console.log(data)
         if ( this.validation(data) || data.nit.replace(/[^0-9]/g, '').includes('22222222') ) {
-          return data = { ...data, total: this.cleanNumberString(data.total), commerce: '', read: false,  "url": uploadedUrl };
+          return data = { ...data, total: (data.total == '') ? '0' : this.cleanNumberString(data.total), commerce: '', read: false,  "url": uploadedUrl };
         }
-        return data = { ...data, total: this.cleanNumberString(data.total), commerce: '', read: "true",  "url": uploadedUrl }
+        return data = { ...data, total: (data.total == '') ? '0' : this.cleanNumberString(data.total), commerce: '', read: "true",  "url": uploadedUrl }
       } catch (error) {
         console.error("Error parsing JSON:", error);
       }
@@ -128,7 +128,7 @@ export class ApiService {
         "numberInvoice": "",
         "date": "",
         "nit": "",
-        "total": "",
+        "total": "0",
         "produc": "",
         "read": "false",
         "url": uploadedUrl
@@ -164,7 +164,7 @@ export class ApiService {
         "numberInvoice": "",
         "date": "",
         "nit": "",
-        "total": "",
+        "total": "0",
         "produc": "",
         "read": "false",
         "url": uploadedUrl
@@ -176,9 +176,9 @@ export class ApiService {
         data = JSON.parse(jsonString);
         console.log(data, this.validation(data), data.nit.replace(/[^0-9]/g, '').includes('22222222'))
         if ( this.validation(data) || data.nit.replace(/[^0-9]/g, '').includes('22222222') ) {
-          return data = { ...data, total: this.cleanNumberString(data.total), commerce: '', read: false,  "url": uploadedUrl };
+          return data = { ...data, total: (data.total == '') ? '0' : this.cleanNumberString(data.total), commerce: '', read: false,  "url": uploadedUrl };
         }
-        return data = { ...data, total: this.cleanNumberString(data.total), commerce: '', read: "true",  "url": uploadedUrl }
+        return data = { ...data, total: (data.total == '') ? '0' : this.cleanNumberString(data.total), commerce: '', read: "true",  "url": uploadedUrl }
       } catch (error) {
         console.error("Error parsing JSON:", error);
       }
@@ -188,7 +188,7 @@ export class ApiService {
         "numberInvoice": "",
         "date": "",
         "nit": "",
-        "total": "",
+        "total": "0",
         "produc": "",
         "read": "false",
         "url": uploadedUrl
@@ -204,7 +204,8 @@ export class ApiService {
     console.log(Number(this.cleanNumberString(data.total)))
     console.log(data.total.length)
     return (
-      data.nit == ""
+      data.total == ""
+      || data.nit == ""
       || data.product == ""
       || Number(this.cleanNumberString(data.total)) < 20000
       || Number(this.cleanNumberString(data.total)) > 500000
