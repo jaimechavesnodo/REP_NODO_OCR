@@ -2,11 +2,12 @@ import { StorageSharedKeyCredential, BlobServiceClient } from '@azure/storage-bl
 import { BadRequestException, HttpException, HttpStatus, Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
 import { AxiosAdapter } from 'src/common/adapters/axios.adapter';
 import { ReadSaveFileDto } from './dto/read-file-api.dto';
+import * as sharp from 'sharp';
 import * as fs from 'fs';
 import * as path from 'path';
-import * as Tesseract from 'tesseract.js';
 import OpenAI from 'openai';
 import { imageToText } from './prompt-gpt/image-to-text'
+import * as exifremove from 'exifremove';
 
 @Injectable()
 export class ApiService {
@@ -32,7 +33,15 @@ export class ApiService {
 
   async readSaveFile(readSaveFileDto: ReadSaveFileDto) {
     const imageBuffer = await this.downloadImage(readSaveFileDto.url);
-    const filename = path.basename(readSaveFileDto.url);
+    const cleanImageBuffer = exifremove.remove(imageBuffer);  // Remove metadata
+
+    // Use sharp to process the image, for example, resizing or converting it to JPEG
+    const processedImageBuffer = await sharp(cleanImageBuffer)
+      .resize({ width: 800 })  // Resize the image to 800px width
+      .jpeg({ quality: 80 })   // Convert to JPEG with 80% quality
+      .toBuffer();
+
+    const filename = path.basename(readSaveFileDto.url, path.extname(readSaveFileDto.url)) + '.jpeg';  // Ensure the extension is correct
     const uploadsDir = path.join(__dirname, '..', 'uploads');
 
     if (!fs.existsSync(uploadsDir)) {
@@ -40,12 +49,21 @@ export class ApiService {
     }
 
     const tempFilePath = path.join(uploadsDir, filename);
-    fs.writeFileSync(tempFilePath, imageBuffer);
-    const uploadedUrl = await this.uploadImage(imageBuffer, filename);
-    const text = await imageToText(this.openai, uploadedUrl);
+    fs.writeFileSync(tempFilePath, processedImageBuffer); 
+    
+    // Upload the processed image to Azure Blob Storage
+    const uploadedUrl = await this.uploadImage(processedImageBuffer, filename);
+    console.log(uploadedUrl);
+
+    // Convert the processed image buffer to base64
+    const base64Image = processedImageBuffer.toString('base64');
+    
+    // Send the base64 image to the OpenAI model
+    const text = await imageToText(this.openai, base64Image);
+
+    // Remove the temporary file
     fs.unlinkSync(tempFilePath);
 
-    console.log(uploadedUrl)
     
     let data: any;
     if (text.msg.includes('Redeban')) {

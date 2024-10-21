@@ -2,6 +2,7 @@ import OpenAI from "openai";
 import { imageToTextPrompt } from "./texts/imageToText.prompt";
 
 export const imageToText = async (openai: OpenAI, imageFile: string) => {
+    console.log(imageFile)
     const prompt = imageToTextPrompt();
     const response = await openai.chat.completions.create({
         model: 'gpt-4-turbo', //'gpt-4-vision-preview',
@@ -17,7 +18,7 @@ export const imageToText = async (openai: OpenAI, imageFile: string) => {
                     {
                         type: 'image_url',
                         image_url: {
-                            url: imageFile
+                            url: `data:image/jpeg;base64,${imageFile}` 
                         },
                     },
                 ],
