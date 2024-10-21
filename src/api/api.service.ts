@@ -33,12 +33,11 @@ export class ApiService {
 
   async readSaveFile(readSaveFileDto: ReadSaveFileDto) {
     const imageBuffer = await this.downloadImage(readSaveFileDto.url);
-    const cleanImageBuffer = exifremove.remove(imageBuffer);  // Remove metadata
+    const cleanImageBuffer = exifremove.remove(imageBuffer);
 
-    // Use sharp to process the image, for example, resizing or converting it to JPEG
     const processedImageBuffer = await sharp(cleanImageBuffer)
-      .resize({ width: 800 })  // Resize the image to 800px width
-      .jpeg({ quality: 80 })   // Convert to JPEG with 80% quality
+      .resize({ width: 800 })
+      .jpeg({ quality: 80 })
       .toBuffer();
 
     const filename = path.basename(readSaveFileDto.url, path.extname(readSaveFileDto.url)) + '.jpeg';  // Ensure the extension is correct
@@ -50,18 +49,14 @@ export class ApiService {
 
     const tempFilePath = path.join(uploadsDir, filename);
     fs.writeFileSync(tempFilePath, processedImageBuffer); 
-    
-    // Upload the processed image to Azure Blob Storage
+
     const uploadedUrl = await this.uploadImage(processedImageBuffer, filename);
     console.log(uploadedUrl);
 
-    // Convert the processed image buffer to base64
     const base64Image = processedImageBuffer.toString('base64');
-    
-    // Send the base64 image to the OpenAI model
+
     const text = await imageToText(this.openai, base64Image);
 
-    // Remove the temporary file
     fs.unlinkSync(tempFilePath);
 
     
