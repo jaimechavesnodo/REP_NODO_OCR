@@ -40,7 +40,7 @@ export class ApiService {
       .jpeg({ quality: 80 })
       .toBuffer();
 
-    const filename = path.basename(readSaveFileDto.url, path.extname(readSaveFileDto.url)) + '.jpeg';  // Ensure the extension is correct
+    const filename = path.basename(readSaveFileDto.url, path.extname(readSaveFileDto.url)) + '.jpeg';
     const uploadsDir = path.join(__dirname, '..', 'uploads');
 
     if (!fs.existsSync(uploadsDir)) {
@@ -152,8 +152,14 @@ export class ApiService {
   }
 
   async readSaveFile3(readSaveFileDto: ReadSaveFileDto) {
-    const imageBuffer = await this.downloadImage2(readSaveFileDto.url);
     const filename = this.getIdFromUrl(readSaveFileDto.url);
+    const imageBuffer = await this.downloadImage2(filename);
+    const cleanImageBuffer = exifremove.remove(imageBuffer);
+
+    const processedImageBuffer = await sharp(cleanImageBuffer)
+      .resize({ width: 800 })
+      .jpeg({ quality: 80 })
+      .toBuffer();
     console.log(filename);
     console.log('----------------------------------------------------------------')
     const uploadsDir = path.join(__dirname, '..', 'uploads');
@@ -163,9 +169,10 @@ export class ApiService {
     }
 
     const tempFilePath = path.join(uploadsDir, filename);
-    fs.writeFileSync(tempFilePath, imageBuffer);
-    const uploadedUrl = await this.uploadImage(imageBuffer, filename);
-    const text = await imageToText(this.openai, uploadedUrl);
+    fs.writeFileSync(tempFilePath, processedImageBuffer);
+    const uploadedUrl = await this.uploadImage(processedImageBuffer, filename);
+    const base64Image = processedImageBuffer.toString('base64');
+    const text = await imageToText(this.openai, base64Image);
     fs.unlinkSync(tempFilePath);
 
     console.log(uploadedUrl)
@@ -263,12 +270,12 @@ export class ApiService {
     }
   }
 
-  async downloadImage2(url: string): Promise<Buffer> {
+  async downloadImage2(id: string): Promise<Buffer> {
     try {
       const headers = {
         Authorization: `Bearer ${process.env.WATI_TOKEN}`
       }; 
-      const response: any = await this.httpService.get(`${url}`, { headers, responseType: 'arraybuffer' });
+      const response: any = await this.httpService.get(`https://drive.usercontent.google.com/download?id=${id}&authuser=0`, { headers, responseType: 'arraybuffer' });
       console.log(response);
       if (!response) { 
         throw new Error('Response data is undefined');
@@ -291,7 +298,6 @@ export class ApiService {
       throw new HttpException('Image upload failed', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
-
   getIdFromUrl(url: string): string | null {
     const regex = /[?&]id=([^&]+)/;
     const match = url.match(regex);
